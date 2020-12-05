@@ -8,7 +8,7 @@ Nous allons aujourd'hui nous lancer écrire des message secret !
 
 Commençons par un peu de vocabulaire:
 
-- **Cryptologie** : a cryptologie, étymologiquement la science du secret, ne peut être vraiment considérée comme une science que depuis peu de temps. Cette science englobe la cryptographie – l’écriture secrète –, la cryptanalyse – l’analyse et l’attaque de cette dernière –, et la stéganographie – l’art de la dissimulation.
+- **Cryptologie** : La cryptologie, étymologiquement la science du secret, ne peut être vraiment considérée comme une science que depuis peu de temps. Cette science englobe la cryptographie – l’écriture secrète –, la cryptanalyse – l’analyse et l’attaque de cette dernière –, et la stéganographie – l’art de la dissimulation.
 - **Cryptographie** : La cryptographie est une des disciplines de la cryptologie s’attachant à protéger des messages (assurant confidentialité, authenticité et intégrité) en s’aidant souvent de secrets ou clés.
 - **Chiffrement** : Le chiffrement est un procédé de cryptographie grâce auquel on souhaite rendre la compréhension d’un document impossible à toute personne qui n’a pas la clé de (dé)chiffrement. Ce principe est généralement lié au principe d’accès conditionnel.
 - **Chiffrer** : L’action de procéder à un chiffrement.
@@ -80,39 +80,96 @@ Je t'invite tout de même à faire attention... dans le chiffre de César l'alph
 >>> chr(90+3)
 ']'
 """
+import string
+import logging
+import sys
+from typing import Dict
 
 
-def do_cipher(plain_text: str, key: int) -> str:
-    # Met ton code ici
-    return "Il faudrait retourner un vrai truc ;)"
+
+def crack_key(cypher_text: str) -> int:
+    """Finde key"""
+    ALPHABET = list(string.ascii_uppercase)
+    CYPHER_TEXT = list(cypher_text)
+    list_occurence_by_letter = []
+    for letter in ALPHABET:
+        occurrence = CYPHER_TEXT.count(letter)
+        list_occurence_by_letter.append(occurrence)
+    INDEX_LETTER_MOST_OCCURENCE = list_occurence_by_letter.index(
+        max(list_occurence_by_letter)
+    )
+    LIKELY_TO_BE_E = ALPHABET[INDEX_LETTER_MOST_OCCURENCE]
+    LIKELY_KEY = ord(LIKELY_TO_BE_E) - ord("E")
+    return LIKELY_KEY
 
 
-def do_decipher(cipher_text: str, key: int) -> str:
-    # Met ton code ici
-    return "Il faudrait retourner un vrai truc ;)"
+def do_decipher(cypher_text: str, key: int) -> str:
+    """Decipher text """
+    ALPHABET = list(string.ascii_uppercase)
+
+    CYPHER_TEXT = list(cypher_text)
+    cypher_alphabet = list(string.ascii_uppercase)
+    if key > 0:
+        cypher_alphabet.extend(cypher_alphabet[:key])
+        del cypher_alphabet[:key]
+    elif key < 0:
+        letter_to_deplace = cypher_alphabet[key:]
+        letter_to_deplace.extend(cypher_alphabet)
+        cypher_alphabet = letter_to_deplace
+        del cypher_alphabet[key:]
+
+    decypher_text = []
+
+    for counter, letter_to_crack in enumerate(CYPHER_TEXT):
+        if letter_to_crack not in ALPHABET:
+            decypher_text.append(letter_to_crack)
+        else:
+            decypher_text.append(ALPHABET[cypher_alphabet.index(letter_to_crack)])
+    decypher_text = "".join(decypher_text)
+    return decypher_text
+
+
+def exercise_2_2():
+    INTERCEPTED_TEXT = (
+        "KPIVKM L'MABIQVO : "
+        "RMCVM LMUWVMBBM, MTTM I CVM IXXIZMVKM PCUIQVM, UIQA LWBMM "
+        "LM LMCF XMBQBMA KWZVMA ACZ TM NZWVB MB LM LMCF IQTMA LMUWVQIYCMA, "
+        "BGXM KPICDM-AWCZQA, LIVA TM LWA. UITOZM AMA IQTMA, MTTM VM AIQB YCM "
+        "XTIVMZ. LCZIVB TMCZA WXMZIBQWVA, MTTM I XWCZ VWU LM KWLM JTIKSJQZL."
+    )
+
+    EXPECTED_TEXT = (
+        "Chance d'Estaing : "
+        "Jeune demonette, elle a une apparence humaine, mais dotee "
+        "de deux petites cornes sur le front et de deux ailes demoniaques, "
+        "type chauve-souris, dans le dos. Malgre ses ailes, elle ne sait que "
+        "planer. Durant leurs operations, elle a pour nom de code Blackbird."
+    )
+
+    print("************* Exercise  2.2 *************\n\n")
+    print("****** Let's break Caesar's cypher ******\n\n")
+    print("Intercepted text    :", INTERCEPTED_TEXT)
+    print("Expacted clear text :", EXPECTED_TEXT)
+    print("Key                 :", "???")
+    print()
+
+    print("Let's break it")
+    CRACKED_KEY = crack_key(INTERCEPTED_TEXT)
+    print("Cracked key      :", CRACKED_KEY)
+    print()
+
+    print("Let's use the cracked key (will it work?!)")
+    CRACKED_TEXT = do_decipher(INTERCEPTED_TEXT, CRACKED_KEY)
+    print("Cracked text:", CRACKED_TEXT)
+    print()
+
+    SUCCESS = EXPECTED_TEXT.upper() == CRACKED_TEXT
+    print("Did it worked?", "OK :)" if SUCCESS else "Nope :(")
 
 
 def main():
-    PLAIN_TEXT = "Ave Caesar morituri te salutant"
-    KEY = 3
 
-    print("************ Caesar's cypher ************\n\n")
-    print("Plain text   :", PLAIN_TEXT)
-    print("key          :", KEY)
-    print()
-
-    print("Let's cipher now!")
-    CIPHER_TEXT = do_cipher(PLAIN_TEXT, KEY)
-    print("Cipher text  :", CIPHER_TEXT)
-    print()
-
-    print("Let's decipher (will it work?!)")
-    DECIPHER_TEXT = do_decipher(PLAIN_TEXT, KEY)
-    print("Decipher text:", DECIPHER_TEXT)
-    print()
-
-    SUCCESS = PLAIN_TEXT.upper() == DECIPHER_TEXT
-    print("Did it worked?", "OK :)" if SUCCESS else "Nope :(")
+    exercise_2_2()
 
 
 if __name__ == "__main__":
